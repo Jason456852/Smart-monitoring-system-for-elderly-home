@@ -102,6 +102,7 @@ def reset_txt():
         f = open(i, "w")
         f.close()
 
+"""delete outdated files"""
 def delete_outdated():
     filenames = next(os.walk(path + "\\screenshots"), (None, None, []))[2]
     if len(filenames) >= 10:
