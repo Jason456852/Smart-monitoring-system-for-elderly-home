@@ -17,23 +17,20 @@ mpDraw = mp.solutions.drawing_utils
 mpPose = mp.solutions.pose
 pose = mpPose.Pose()
 
-"""reset_txt"""
+"""reset txt"""
 reset_txt()
 
-def loop():
-    """delete outdated files"""
-    delete_outdated()
 
+def loop():
     """have camera ready"""
     video_camera = cv2.VideoCapture(0)
-    video_camera.open("https://192.168.1.3:8080/video")
+    video_camera.open("https://192.168.68.107:8080/video")
 
     """generate video output"""
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    temp = datetime.now()
-    video_file_name = temp.strftime("%Y-%m-%d-%H-%M-%S") + ".avi"
+    x = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    video_file_name = x + ".avi"
     tempp = rescale_frame(video_camera.read()[1], 0.1)
-    test = screen_capture(tempp, temp)
     video_output = cv2.VideoWriter(video_file_name, fourcc, 2.0, (tempp.shape[1], tempp.shape[0]), isColor=False)
 
     """variables for looping"""
@@ -67,11 +64,13 @@ def loop():
 
                 """threads for output dots"""
                 if results.pose_landmarks:
-                    fall = dots_insert(list(enumerate(results.pose_landmarks.landmark)))
-                    if fall:
+                    person = DotsDetection(list(enumerate(results.pose_landmarks.landmark)))
+                    if person.falling:
                         screencap = screen_capture(img, now)
                         message_bot("Fall", screencap)
-
+                    if person.raising_hand:
+                        screencap = screen_capture(img, now)
+                        message_bot("Need Help", screencap)
                 """class detection"""
                 ClassIndex, confidence, bbox = model.detect(frame, confThreshold=0.65)
             except cv2.error:
@@ -125,6 +124,12 @@ def loop():
         cv2.putText(img, "fps:" + str("{:.1f}".format(fps)), (10, 120), text_font,
                     fontScale=text_font_scale, color=text_color,
                     thickness=text_thickness)
+
+        # screenshot
+        # screen_capture(img, now)
+
+        # message
+        # message_bot(event, screen_capture(img, now))
 
         """display"""
         single_frame_1 = rescale_frame(img, 0.4)
