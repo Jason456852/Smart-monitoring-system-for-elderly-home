@@ -4,7 +4,7 @@ from functions import *
 dots_enum_hist = []
 fall_check = []
 hand_check = []
-
+last_raise_hand_call = [False, 0]
 
 def getSlopes(x1, y1, x2, y2):
     yDiff = abs(y1 - y2)
@@ -69,6 +69,7 @@ class DotsDetection:
         self.falling = fall
 
     def raise_hand(self):
+        global hand_check, last_raise_hand_call
         right_elbow = self.list[14][1]
         right_wrist = self.list[16][1]
         left_elbow = self.list[13][1]
@@ -84,6 +85,7 @@ class DotsDetection:
         hand = False
         if len(hand_check) > 6:
             hand_check.pop(0)
-        if False not in hand_check:
+        if False not in hand_check and (int(datetime.now().strftime("%M")) - last_raise_hand_call[1] >= 5 or not last_raise_hand_call[1]):
             hand = True
+            last_raise_hand_call = [True, int(datetime.now().strftime("%M"))]
         self.raising_hand = hand
