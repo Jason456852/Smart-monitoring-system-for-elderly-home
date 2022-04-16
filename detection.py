@@ -1,5 +1,4 @@
 """detection.py"""
-import math
 from functions import *
 
 dots_enum_hist = []
