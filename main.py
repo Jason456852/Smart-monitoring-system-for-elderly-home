@@ -24,7 +24,7 @@ reset_txt()
 def loop():
     """have camera ready"""
     video_camera = cv2.VideoCapture(0)
-    video_camera.open("https://192.168.68.107:8080/video")
+    video_camera.open("video stream URL")
 
     """generate video output"""
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
