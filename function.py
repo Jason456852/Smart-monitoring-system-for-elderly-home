@@ -27,7 +27,7 @@ text_thickness = 2
 path = str(os.path.dirname(os.path.realpath(__file__)))
 
 """webhook path"""
-webhook = Webhook("https://discord.com/api/webhooks/959731847523336202/BVs_n1aXE_3lsaQljMiFHm_qvTRFwm9zD7iGsh7nwfqoUTAxJfXM3H3LJR50KghS6c_L")
+webhook = Webhook("URL for discord server")
 
 
 """lower resolution"""
