@@ -20,7 +20,7 @@ pose = mpPose.Pose()
 """reset txt"""
 reset_txt()
 
-
+"""function loop() for booting"""
 def loop():
     """have camera ready"""
     video_camera = cv2.VideoCapture(0)
@@ -39,11 +39,12 @@ def loop():
     # threads = []
     ClassIndex, confidence, bbox = [], [], []
 
+    """Main loop"""
     while running:
         """
             This part gets every frame.
             "img" will be for display.
-            "frame" will be for detection.
+            "frame" is for detection.
             The output video will be in "frame" format.
         """
         _, img = video_camera.read()
@@ -57,12 +58,13 @@ def loop():
         """
         p = round(float(now.strftime("%S.%f")), 1)
         if p % 1 == 0.5 or p % 1 == 0:
+            """try except to prevent program ending errors"""
             try:
                 """dots detection"""
                 imgRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 results = pose.process(imgRGB)
 
-                """threads for output dots"""
+                """output unusual activities"""
                 if results.pose_landmarks:
                     person = DotsDetection(list(enumerate(results.pose_landmarks.landmark)))
                     if person.falling:
@@ -125,12 +127,6 @@ def loop():
                     fontScale=text_font_scale, color=text_color,
                     thickness=text_thickness)
 
-        # screenshot
-        # screen_capture(img, now)
-
-        # message
-        # message_bot(event, screen_capture(img, now))
-
         """display"""
         single_frame_1 = rescale_frame(img, 0.4)
         cv2.imshow("Video", single_frame_1)
@@ -143,8 +139,9 @@ def loop():
             cv2.destroyAllWindows()
             running = False
 
-            """save the video if needed"""
-            if input("Save the video?") == "y":
+            """save the video"""
+            # if input("Save the video?") == "y":
+            if True:
                 src = path + "/" + video_file_name
                 dst = path + "/videos"
                 print("Saved.")
@@ -157,8 +154,8 @@ st.legacy_caching.clear_cache()
 """booting"""
 while True:
     current_time = int(datetime.now().strftime("%H"))
-    # if current_time > 23 or current_time < 6:
-    if current_time > 0 and input("Boot?") == "y":
+    # if True:
+    if current_time > 23 or current_time < 6:
         loop()
     else:
         break
