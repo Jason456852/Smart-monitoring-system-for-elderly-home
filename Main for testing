@@ -1,0 +1,131 @@
+"""main for testing"""
+"""main.py"""
+import cv2.cv2
+
+from functions import *
+from detection import *
+
+
+"""input dataset from coco"""
+config_file = 'config.pbtxt'
+frozen_model = 'models.pb'
+model = cv2.dnn_DetectionModel(frozen_model, config_file)
+model.setInputSize(320, 320)
+model.setInputScale(1.0 / 127.5)
+model.setInputMean((127.5, 127.5, 127.5))
+model.setInputSwapRB(True)
+
+"""detect pose"""
+mpDraw = mp.solutions.drawing_utils
+mpPose = mp.solutions.pose
+pose = mpPose.Pose()
+
+
+def loop():
+    path = r'D:\AI work\camera_capturing\dataset'
+    ClassIndex, confidence, bbox = [], [], []
+    filenames = next(os.walk(path), (None, None, []))[2]
+    person_count, standing, lying, standingFalse, lyingFalse = 0, 0, 0, 0, 0
+    standingIgnored, lyingIgnored, hand_raise, correcthand = 0, 0, 0, 0
+    totalStand, totalLie, handsIgnored, noHands = 0, 0, 0, 0
+    chairDetected, bedDetected, bedCorrect, chairCorrect = 0, 0, 0, 0
+
+    for i in filenames:
+        """
+            This part gets every frame.
+            "img" will be for display.
+            "frame" will be for detection.
+            The output video will be in "frame" format.
+        """
+        img = cv2.cv2.imread(path + "\\" + i)
+        frame = rescale_frame(img, 0.2)
+        now = datetime.now()
+        """class detection"""
+        ClassIndex, confidence, bbox = model.detect(frame, confThreshold=0.65)
+        if len(ClassIndex) != 0:
+            for ClassIND, conf, boxes in zip(ClassIndex.flatten(), confidence.flatten(), bbox):
+                if ClassIND == 62:
+                    # chair
+                    chairDetected += 1
+                    if "chair" in i:
+                        chairCorrect += 1
+                if ClassIND == 65:
+                    # bed
+                    bedDetected += 1
+                    if "bed" in i:
+                        bedCorrect += 1
+
+        """
+            This part only runs every 0.5 seconds.
+            It finds dots and output the dots out using threading.
+        """
+        try:
+            """dots detection"""
+            imgRGB = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = pose.process(imgRGB)
+
+            """threads for output dots"""
+            if results.pose_landmarks:
+                person = DotsDetection(list(enumerate(results.pose_landmarks.landmark)))
+                person_count += 1
+                if person.falling:
+                    # print(i + " falling")
+                    if "standing" in i:
+                        print(i + " for false lying")
+                        lyingFalse += 1
+                    elif "lying" in i:
+                        lying += 1
+                    totalLie += 1
+                else:
+                    # print(i + " standing")
+                    if "lying" in i:
+                        print(i + " for false standing")
+                        standingFalse += 1
+                    elif "standing" in i:
+                        standing += 1
+                    totalStand += 1
+                if person.raising_hand:
+                    # print(i + " raising hand")
+                    if "handsup" in i:
+                        correcthand += 1
+                    hand_raise += 1
+                elif "handsup" in i:
+                    noHands += 1
+                    print(i + " for no hand up spotted")
+            else:
+                if "standing" in i:
+                    standingIgnored += 1
+                elif "lying" in i:
+                    lyingIgnored += 1
+                elif "handsup" in i:
+                    handsIgnored += 1
+        except cv2.error:
+            pass
+
+        """
+            This part runs for every frame.
+            It creates rectangles for every frame,
+            althought the detection part of it only runs every 0.5 second.
+        """
+    print("Total People images: " + str(len(filenames)))
+    print("People: " + str(person_count))
+    print("Correct standing(detect stand with filename standing): " + str(standing))
+    print("Correct lying(detect lying with filename lying): " + str(lying))
+    print("lying mistake for standing: " + str(standingFalse))
+    print("standing mistake for lying: " + str(lyingFalse))
+    print("Total stand: " + str(totalStand))
+    print("Total lying: " + str(totalLie))
+    print("Unable to detect human in standing: " + str(standingIgnored))
+    print("Unable to detect human in lying: " + str(lyingIgnored))
+    print("Unable to detect human in hands: " + str(handsIgnored))
+    print("Total Hands spotted " + str(hand_raise))
+    print("Spotted Hands with file name Handsup " + str(correcthand))
+    print("No hands spotted with file name Handsup " + str(noHands))
+    print("Bed detected " + str(bedDetected))
+    print("Chair Detected " + str(chairDetected))
+    print("Bed detected in bed images " + str(bedCorrect))
+    print("Chair Detected in chair images " + str(chairCorrect))
+
+st.legacy_caching.clear_cache()
+
+loop()
